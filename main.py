@@ -31,10 +31,11 @@ WELCOME_PHOTO = "https://example.com/welcome.jpg"
 RULES_URL = "https://example.com/rules"
 
 # Tariff links
-TARIFF_1_URL = "https://example.com/tariff-1"
-TARIFF_2_URL = "https://example.com/tariff-2"
-TARIFF_3_URL = "https://example.com/tariff-3"
-
+STANDARD_URLS = [
+    "https://example.com/tariff-1",
+    "https://example.com/tariff-2",
+    "https://example.com/tariff-3"
+]
 
 # OF URLs
 DISCOUNT_URLS = [
@@ -72,9 +73,9 @@ logger = logging.getLogger(__name__)
     SOCIAL_HANDLE,
     LOCATION,
     DEVICE,
-    GOODBYE,
+    GOODBYE1,
     EXPERIENCE,
-    PLACEHOLDER,
+    KINKS,
     RULES,
     TARIFFS,
     SIX_LINKS,
@@ -107,9 +108,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_photo(
         photo=WELCOME_PHOTO,
         caption=(
-            "👋 Welcome!\n\n"
-            "We're excited to have you take part in the challenge.\n\n"
-            "When you're ready to begin, click the button below."
+            "This is a private application. Your answers will only be used to review your application and communicate with you about the challenge. I am accepting a limited number of participants, so I will ask you a few short questions first. Be honest. The goal is to find participants who are generally suited to this format."
         ),
         reply_markup=reply_markup,
     )
@@ -128,9 +127,7 @@ async def ready(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await query.answer()
 
     await query.message.reply_text(
-        "Great! Let's get started.\n\n"
-        "Please enter your name and age.\n\n"
-        "For example: John, 25"
+        "Tell me your name and age."
     )
 
     return NAME_AGE
@@ -148,9 +145,7 @@ async def receive_name_age(
     context.user_data["name_age"] = update.message.text.strip()
 
     await update.message.reply_text(
-        "Thank you!\n\n"
-        "Now please enter your handle on your social media platform.\n\n"
-        "For example: @username"
+        "Tell me your fetlife nickname.\nExample: sub_123
     )
 
     return SOCIAL_HANDLE
@@ -168,8 +163,7 @@ async def receive_social_handle(
     context.user_data["social_handle"] = update.message.text.strip()
 
     await update.message.reply_text(
-        "Got it.\n\n"
-        "Please enter your location."
+        "What is your location / time zone?\nExample: Barcelona / UTC+2"
     )
 
     return LOCATION
@@ -208,7 +202,7 @@ async def receive_location(
     ]
 
     await update.message.reply_text(
-        "Do you have a device that you can use for the challenge?",
+        "Do you currently have a Chastity device?",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -248,7 +242,7 @@ async def device_choice(
 
 
 # ============================================================
-# STATE 6: GOODBYE
+# STATE 6: GOODBYE1
 # ============================================================
 
 async def goodbye_no_device(
@@ -259,9 +253,7 @@ async def goodbye_no_device(
     query = update.callback_query
 
     await query.message.reply_text(
-        "Thank you for your interest in the challenge.\n\n"
-        "Unfortunately, you need access to a device to participate.\n\n"
-        "We hope to see you another time!"
+        "A chastity device is required for this challenge. You may try to apply again when you get one. Thank you for your interest."
     )
 
     return ConversationHandler.END
@@ -279,24 +271,40 @@ async def receive_experience(
     context.user_data["experience"] = update.message.text.strip()
 
     await update.message.reply_text(
-        "Thank you!\n\n"
-        "PLACEHOLDER: This question will be added later.\n\n"
-        "For now, please type your answer or any text to continue."
+        "What is the longest you have gone without orgasm or release?\nExample: 15 days"
     )
 
-    return PLACEHOLDER
+    return KINKS
 
 
 # ============================================================
-# STATE 8: PLACEHOLDER
+# STATE 8: EXPERIENCE
 # ============================================================
 
-async def receive_placeholder(
+async def receive_kinks(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> int:
 
-    context.user_data["placeholder"] = update.message.text.strip()
+    context.user_data["experience"] = update.message.text.strip()
+
+    await update.message.reply_text(
+        "What is the longest you have gone without orgasm or release?\nExample: 15 days"
+    )
+
+    return RULES
+
+
+# ============================================================
+# STATE 8: RULES
+# ============================================================
+
+async def receive_rules(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> int:
+
+    context.user_data["rules"] = update.message.text.strip()
 
     keyboard = [
         [
@@ -374,19 +382,19 @@ async def show_tariffs(message) -> None:
     keyboard = [
         [
             InlineKeyboardButton(
-                "Level 1",
+                "Shadow",
                 url=TARIFF_1_URL,
             )
         ],
         [
             InlineKeyboardButton(
-                "Level 2",
+                "Admirer",
                 url=TARIFF_2_URL,
             )
         ],
         [
             InlineKeyboardButton(
-                "Level 3",
+                "Devotee",
                 url=TARIFF_3_URL,
             )
         ],
@@ -413,7 +421,7 @@ async def send_discount_offer(
     keyboard = [
         [
             InlineKeyboardButton(
-                "🔥 Unlock a bigger discount",
+                "UNLOCK",
                 url=DISCOUNT_URL,
             )
         ]
@@ -422,8 +430,8 @@ async def send_discount_offer(
     await context.bot.send_message(
         chat_id=chat_id,
         text=(
-            "You have doubts?\n\n"
-            "Would you like to unlock a bigger discount?"
+            "You seem to have doubts.\n\n"
+            "Want to unlock a bigger discount?"
         ),
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
@@ -441,50 +449,90 @@ async def show_six_links(
     # This function can be called from wherever you decide
     # the user should enter state 11.
 
-    keyboard = [
+    message1 = ("You can get a special discount on your Locktober tariff by subscribing to my OnlyFans.\n\n",
+    "You'll get:\n",
+    "- an extra way to interact with me\n",
+    "**access too 100+ pieces of content**\n",
+    "plenty to keep you teased and entertained throughout Locktober\n",
+    "- additional tasks exclusively for my OF subscribers\n\n",
+    "It makes the whole challenge much more interesting.\n\n",
+    "**1 MONTH SUBSCRIPTION -- $9.99**")
+    
+    keyboard1 = [
         [
             InlineKeyboardButton(
-                "Button 1",
-                url=STATE_11_URLS[0],
+                "SHADOW -- 30% OFF" + "\n" + "€50 -- **€35**",
+                url=DISCOUNT_URLS[0],
             )
         ],
         [
             InlineKeyboardButton(
-                "Button 2",
-                url=STATE_11_URLS[1],
+                "**ADMIRER -- 20% OFF**" + "\n" + "€200 -- **€160**",
+                url=DISCOUNT_URLS[1],
             )
         ],
         [
             InlineKeyboardButton(
-                "Button 3",
-                url=STATE_11_URLS[2],
+                "**DEVOTEE - 15% OFF**" + "\n" + "€500 -- **€425**",
+                url=DISCOUNT_URLS[2],
+            )
+        ]
+    ]
+
+    message2 = "Or go for **3 MONTHS -- $29.97** and unlock an even bigger discount:"
+
+    keyboard2 = [
+        [
+            InlineKeyboardButton(
+                "**SHADOW -- 70% OFF**" + "\n" + "€50 -- €15",
+                url=DISCOUNT_URLS[3],
             )
         ],
         [
             InlineKeyboardButton(
-                "Button 4",
-                url=STATE_11_URLS[3],
+                "**ADMIRER -- 30% OFF**" + "\n" + "€200 -- **€140**",
+                url=DISCOUNT_URLS[4],
             )
         ],
         [
             InlineKeyboardButton(
-                "Button 5",
-                url=STATE_11_URLS[4],
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                "Button 6",
-                url=STATE_11_URLS[5],
+                "**DEVOTEE -- 20% OFF**" + "\n" + "€500 -- **€400**",
+                url=DISCOUNT_URLS[5],
             )
         ],
     ]
 
     await update.effective_message.reply_text(
-        "Please choose one of the following options:",
-        reply_markup=InlineKeyboardMarkup(keyboard),
+        message1,
+        reply_markup=InlineKeyboardMarkup(keyboard1),
     )
 
+    await update.effective_message.reply_text(
+        message2,
+        reply_markup=InlineKeyboardMarkup(keyboard2),
+    )
+    
+    keyboard3 = [
+            [
+                InlineKeyboardButton(
+                    "I SUBSCRIBED TO ONLYFANS",
+                    callback_data="tariffs_to_congratulations"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "**ADMIRER -- 30% OFF**" + "\n" + "€200 -- **€140**",
+                    callback_data="tariffs_to_regular_payment"
+                )
+            ],
+        ]
+
+    await update.effective_message.reply_text(
+        "Choose how you would like to continue:\n",
+        reply_markup=InlineKeyboardMarkup(keyboard3)
+    )
+        
+    
     return SIX_LINKS
 
 
@@ -571,7 +619,8 @@ async def send_application_to_admin(
         f"Location: {data.get('location', '-')}\n"
         f"Device: {data.get('device', '-')}\n"
         f"Experience: {data.get('experience', '-')}\n"
-        f"Placeholder: {data.get('placeholder', '-')}\n"
+        f"Kinks: {data.get('kinks', '-')}\n"
+        f"Tariff: {data.get('tariff', '-')}\n"
         f"Rules agreed: {data.get('rules_agreed', False)}"
     )
 
@@ -610,7 +659,7 @@ async def show_congratulations(
 
 
 # ============================================================
-# STATE 13 -> STATE 14
+# STATE 14: REGULAR PAYMENT
 # ============================================================
 
 async def regular_payment(
@@ -618,13 +667,32 @@ async def regular_payment(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> int:
 
-    query = update.callback_query
-    await query.answer()
+    message = ""
+    
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "SHADOW -- €50",
+                url=STANDARD_URLS[0],
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "ADMIRER -- €200",
+                url=STANDARD_URLS[1],
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "DEVOTEE -- €500",
+                url=STANDARD_URLS[2],
+            )
+        ]
+    ]
 
-    await query.message.reply_text(
-        "💳 Regular payment method\n\n"
-        "PLACEHOLDER: Add your regular payment instructions "
-        "or payment link here."
+    await update.effective_message.reply_text(
+        message,
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
     return REGULAR_PAYMENT
@@ -713,10 +781,10 @@ def main() -> None:
                 )
             ],
 
-            PLACEHOLDER: [
+            KINKS: [
                 MessageHandler(
                     filters.TEXT & ~filters.COMMAND,
-                    receive_placeholder,
+                    receive_kinks
                 )
             ],
 
@@ -736,7 +804,15 @@ def main() -> None:
                 CommandHandler(
                     "continue",
                     show_six_links,
-                )
+                ),
+                CallbackQueryHandler(
+                    tariffs_to_congratulations,
+                    pattern="^tariffs_to_congratulations$",
+                ),
+                CallbackQueryHandler(
+                tariffs_to_regular_payment,
+                    pattern="^tariffs_to_regular_payment$",
+                 ),
             ],
 
             SIX_LINKS: [

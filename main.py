@@ -145,7 +145,7 @@ async def receive_name_age(
     context.user_data["name_age"] = update.message.text.strip()
 
     await update.message.reply_text(
-        "Tell me your fetlife nickname.\nExample: sub_123
+        "Tell me your fetlife nickname.\nExample: sub_123"
     )
 
     return SOCIAL_HANDLE

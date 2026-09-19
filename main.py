@@ -73,7 +73,7 @@ logger = logging.getLogger(__name__)
     SOCIAL_HANDLE,
     LOCATION,
     DEVICE,
-    GOODBYE1,
+    GOODBYE,
     EXPERIENCE,
     KINKS,
     RULES,
@@ -242,7 +242,7 @@ async def device_choice(
 
 
 # ============================================================
-# STATE 6: GOODBYE1
+# STATE 6: GOODBYE
 # ============================================================
 
 async def goodbye_no_device(
